@@ -2,8 +2,7 @@
 
 public class ToggleGameObjectEnable : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject _go;
+    [SerializeField] private GameObject _go;
 
     private bool _enabled = true;
 
