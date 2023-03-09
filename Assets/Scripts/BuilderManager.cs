@@ -1,6 +1,4 @@
-﻿using System;
-using UnityEngine;
-using UnityEngine.Serialization;
+﻿using UnityEngine;
 
 namespace Builder
 {
@@ -11,17 +9,16 @@ namespace Builder
         public LayerMask layerMask;
         public GameObject[] objects;
         public GameObject pendingObject;
-        public ObjectsType objectsType;
+        public TrackObject currentObject;
 
-        public Vector3 _pos;
+        private Vector3 _pos;
         private RaycastHit _hit;
-        private int _currentIndex;
 
         private void Update()
         {
             if (pendingObject != null)
             {
-                if (_currentIndex == 0)
+                if (currentObject.objectType == ObjectsType.Floor)
                 {
                     pendingObject.transform.position = new Vector3
                     (
@@ -35,7 +32,7 @@ namespace Builder
                     pendingObject.transform.position = new Vector3
                     (
                         RoundToNearsGrid(_pos.x),
-                        RoundToNearsGrid(_pos.y),
+                        1.35f,
                         RoundToNearsGrid(_pos.z)
                     );
                 }
@@ -63,12 +60,12 @@ namespace Builder
 
         public void RotateObject(float rotateAmount)
         {
-            pendingObject.transform.Rotate(Vector3.up, rotateAmount);
+            pendingObject.transform.Rotate(Vector3.up, rotateAmount, Space.World);
         }
 
         private void FixedUpdate()
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
 
             if (Physics.Raycast(ray, out _hit, 10000, layerMask))
             {
@@ -79,8 +76,8 @@ namespace Builder
 
         public void SelectObject(int index)
         {
-            _currentIndex = index;
             pendingObject = Instantiate(objects[index], _pos, transform.rotation);
+            currentObject = pendingObject.GetComponent<TrackObject>();
         }
 
         public float RoundToNearsGrid(float pos)
