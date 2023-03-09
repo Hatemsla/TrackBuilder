@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Builder
 {
@@ -10,7 +12,12 @@ namespace Builder
         public GameObject[] objects;
         public GameObject pendingObject;
         public TrackObject currentObject;
+        public GameObject groundPrefab;
+        public List<GameObject> grounds;
 
+        private GameObject _currentGround;
+        private int _currentGroundIndex;
+        private int _currentObjectIndex;
         private Vector3 _pos;
         private RaycastHit _hit;
 
@@ -23,16 +30,17 @@ namespace Builder
                     pendingObject.transform.position = new Vector3
                     (
                         RoundToNearsGrid(_pos.x),
-                        RoundToNearsGrid(_pos.y),
+                        _pos.y,
                         RoundToNearsGrid(_pos.z)
                     );
                 }
                 else
                 {
+                    var y = grounds[_currentGroundIndex].transform.position.y + 1.35f;
                     pendingObject.transform.position = new Vector3
                     (
                         RoundToNearsGrid(_pos.x),
-                        1.35f,
+                        y,
                         RoundToNearsGrid(_pos.z)
                     );
                 }
@@ -53,12 +61,12 @@ namespace Builder
             }
         }
 
-        public void PlaceObject()
+        private void PlaceObject()
         {
             pendingObject = null;
         }
 
-        public void RotateObject(float rotateAmount)
+        private void RotateObject(float rotateAmount)
         {
             pendingObject.transform.Rotate(Vector3.up, rotateAmount, Space.World);
         }
@@ -70,17 +78,71 @@ namespace Builder
             if (Physics.Raycast(ray, out _hit, 10000, layerMask))
             {
                 _pos = _hit.point;
-                
             }
         }
 
         public void SelectObject(int index)
         {
+            _currentObjectIndex = index;
             pendingObject = Instantiate(objects[index], _pos, transform.rotation);
             currentObject = pendingObject.GetComponent<TrackObject>();
         }
 
-        public float RoundToNearsGrid(float pos)
+        public void UpFloor()
+        {
+            if (_currentGroundIndex != grounds.Count - 1)
+            {
+                for (var i = 0; i < grounds.Count; i++)
+                {
+                    if(i != _currentGroundIndex + 1)
+                        grounds[i].SetActive(false);
+                    else
+                    {
+                        grounds[i].SetActive(true);
+                        _currentGround = grounds[i];
+                        _currentGroundIndex = i;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                var newGround = Instantiate(groundPrefab,
+                    new Vector3(0, grounds[^1].transform.position.y + 2.6f, 0), Quaternion.identity);
+
+                grounds.Add(newGround);
+                _currentGroundIndex = grounds.Count - 1;
+                _currentGround = newGround;
+
+                foreach (var ground in grounds)
+                {
+                    ground.SetActive(ground == newGround);
+                }
+            }
+        }
+
+        public void DownFloor()
+        {
+            var prevGroundIndex = grounds.IndexOf(_currentGround) - 1;
+            
+            if(prevGroundIndex < 0)
+                return;
+
+            _currentGroundIndex = prevGroundIndex;
+            
+            for (var i = 0; i < grounds.Count; i++)
+            {
+                if(i != prevGroundIndex)
+                    grounds[i].SetActive(false);
+                else
+                {
+                    grounds[i].SetActive(true);
+                    _currentGround = grounds[i];
+                }
+            }
+        }
+
+        private float RoundToNearsGrid(float pos)
         {
             float xDiff = pos % gridSize;
             pos -= xDiff;
