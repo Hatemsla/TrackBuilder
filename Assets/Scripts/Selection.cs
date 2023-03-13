@@ -33,7 +33,7 @@ namespace Builder
         public void Move()
         {
             _builderManager.pendingObject = selectedObject.transform.root.gameObject;
-            _builderManager.currentObject = selectedObject.GetComponentInParent<TrackObject>();
+            _builderManager.currentObjectType = selectedObject.GetComponentInParent<TrackObject>();
         }
 
         public void Delete()
@@ -45,6 +45,8 @@ namespace Builder
 
         private void Select(GameObject obj)
         {
+            IsSlant(ref obj);
+            
             if (obj == selectedObject)
                 return;
             
@@ -63,6 +65,19 @@ namespace Builder
         {
             selectedObject.GetComponent<Outline>().enabled = false;
             selectedObject = null;
+        }
+
+        private void IsSlant(ref GameObject obj)
+        {
+            var trackObject = obj.GetComponentInParent<TrackObject>();
+
+            if (trackObject)
+            {
+                if (trackObject.objectType == ObjectsType.Slant)
+                {
+                    obj = obj.transform.root.GetComponentInChildren<MeshRenderer>().gameObject;
+                }
+            }
         }
     }
 }

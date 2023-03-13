@@ -705,7 +705,7 @@ GameObject:
   - component: {fileID: 652458754}
   - component: {fileID: 652458753}
   m_Layer: 5
-  m_Name: NewFloorBtn
+  m_Name: UpFloorBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1053,7 +1053,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &872774011
 GameObject:
@@ -1462,7 +1462,7 @@ GameObject:
   - component: {fileID: 1059348219}
   - component: {fileID: 1059348218}
   m_Layer: 5
-  m_Name: NewFloorBtn (1)
+  m_Name: DownFloorBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1775,7 +1775,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "-1\u042D\u0442\u0430\u0436"
+  m_text: "-1 \u042D\u0442\u0430\u0436"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2960,9 +2960,9 @@ MonoBehaviour:
   objects:
   - {fileID: 7920376084157599920, guid: bc8ac98ad4fd93b468b4ed4426afdd39, type: 3}
   - {fileID: 1541676113324626648, guid: 181dbdf7c07606e46b900350b8161edb, type: 3}
-  - {fileID: 7741092270511610273, guid: 4be4750a670ae9d408f36ae05853e988, type: 3}
+  - {fileID: 83540553584772983, guid: 79f648a0d65b94641b6cb852f3b74170, type: 3}
   pendingObject: {fileID: 0}
-  currentObject: {fileID: 0}
+  currentObjectType: {fileID: 0}
   groundPrefab: {fileID: 6798339470373176028, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
   grounds:
   - {fileID: 252294278}
@@ -3181,7 +3181,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6798339470373176016, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6798339470373176016, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
       propertyPath: m_LocalPosition.x

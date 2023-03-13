@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Builder
 {
@@ -11,13 +14,12 @@ namespace Builder
         public LayerMask layerMask;
         public GameObject[] objects;
         public GameObject pendingObject;
-        public TrackObject currentObject;
+        public TrackObject currentObjectType;
         public GameObject groundPrefab;
         public List<GameObject> grounds;
 
         private GameObject _currentGround;
         private int _currentGroundIndex;
-        private int _currentObjectIndex;
         private Vector3 _pos;
         private RaycastHit _hit;
 
@@ -25,7 +27,7 @@ namespace Builder
         {
             if (pendingObject != null)
             {
-                if (currentObject.objectType == ObjectsType.Floor)
+                if (currentObjectType.objectType == ObjectsType.Floor)
                 {
                     pendingObject.transform.position = new Vector3
                     (
@@ -49,14 +51,32 @@ namespace Builder
                 {
                     PlaceObject();
                 }
-
+                
                 if (Input.GetKeyDown(KeyCode.Q))
                 {
-                    RotateObject(-90);
+                    RotateObject(Vector3.up, -90);
                 }
                 else if (Input.GetKeyDown(KeyCode.E))
                 {
-                    RotateObject(90);
+                    RotateObject(Vector3.up, 90);
+                }
+
+                if (currentObjectType.objectType == ObjectsType.Slant)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z))
+                    {
+                        if (currentObjectType.transform.localRotation.z <= 0)
+                        {
+                            RotateObject(Vector3.forward, 20);
+                        }
+                    }
+                    else if (Input.GetKeyDown(KeyCode.X))
+                    {
+                        if (currentObjectType.transform.localRotation.z >= 0)
+                        {
+                            RotateObject(Vector3.forward, -20);
+                        }
+                    }
                 }
             }
         }
@@ -66,9 +86,9 @@ namespace Builder
             pendingObject = null;
         }
 
-        private void RotateObject(float rotateAmount)
+        private void RotateObject(Vector3 axis, float rotateAmount)
         {
-            pendingObject.transform.Rotate(Vector3.up, rotateAmount, Space.World);
+            pendingObject.transform.Rotate(axis, rotateAmount, Space.World);
         }
 
         private void FixedUpdate()
@@ -83,9 +103,8 @@ namespace Builder
 
         public void SelectObject(int index)
         {
-            _currentObjectIndex = index;
             pendingObject = Instantiate(objects[index], _pos, transform.rotation);
-            currentObject = pendingObject.GetComponent<TrackObject>();
+            currentObjectType = pendingObject.GetComponent<TrackObject>();
         }
 
         public void UpFloor()
