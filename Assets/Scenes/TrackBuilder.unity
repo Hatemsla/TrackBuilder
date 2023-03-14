@@ -2957,15 +2957,16 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 8
+  pendingObject: {fileID: 0}
+  currentObjectType: {fileID: 0}
+  groundPrefab: {fileID: 6798339470373176028, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
   objects:
   - {fileID: 7920376084157599920, guid: bc8ac98ad4fd93b468b4ed4426afdd39, type: 3}
   - {fileID: 1541676113324626648, guid: 181dbdf7c07606e46b900350b8161edb, type: 3}
   - {fileID: 83540553584772983, guid: 79f648a0d65b94641b6cb852f3b74170, type: 3}
-  pendingObject: {fileID: 0}
-  currentObjectType: {fileID: 0}
-  groundPrefab: {fileID: 6798339470373176028, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
   grounds:
   - {fileID: 252294278}
+  upPointHeights: []
 --- !u!4 &1964624141
 Transform:
   m_ObjectHideFlags: 0

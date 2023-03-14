@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Linq;
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Builder
 {
@@ -12,70 +10,75 @@ namespace Builder
         public float gridSize;
         public bool canPlace;
         public LayerMask layerMask;
-        public GameObject[] objects;
         public GameObject pendingObject;
         public TrackObject currentObjectType;
         public GameObject groundPrefab;
+        public GameObject[] objects;
         public List<GameObject> grounds;
+        // public List<float> upPointHeights;
+        public Dictionary<float, bool> UpPointHeights;
 
         private GameObject _currentGround;
         private int _currentGroundIndex;
         private Vector3 _pos;
         private RaycastHit _hit;
 
+        private void Start()
+        {
+            UpPointHeights = new Dictionary<float, bool> { { 0f, true } };
+        }
+
         private void Update()
         {
-            if (pendingObject != null)
+            if (pendingObject == null) return;
+            if (currentObjectType.objectType == ObjectsType.Floor)
             {
-                if (currentObjectType.objectType == ObjectsType.Floor)
-                {
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        _pos.y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                }
-                else
-                {
-                    var y = grounds[_currentGroundIndex].transform.position.y + 1.35f;
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                }
+                pendingObject.transform.position = new Vector3
+                (
+                    RoundToNearsGrid(_pos.x),
+                    _pos.y,
+                    RoundToNearsGrid(_pos.z)
+                );
+            }
+            else
+            {
+                var y = grounds[_currentGroundIndex].transform.position.y + 1.35f;
+                pendingObject.transform.position = new Vector3
+                (
+                    RoundToNearsGrid(_pos.x),
+                    y,
+                    RoundToNearsGrid(_pos.z)
+                );
+            }
 
-                if (Input.GetMouseButtonDown(0) && canPlace)
-                {
-                    PlaceObject();
-                }
+            if (Input.GetMouseButtonDown(0) && canPlace)
+            {
+                PlaceObject();
+            }
                 
-                if (Input.GetKeyDown(KeyCode.Q))
-                {
-                    RotateObject(Vector3.up, -90);
-                }
-                else if (Input.GetKeyDown(KeyCode.E))
-                {
-                    RotateObject(Vector3.up, 90);
-                }
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                RotateObject(Vector3.up, -90);
+            }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                RotateObject(Vector3.up, 90);
+            }
 
-                if (currentObjectType.objectType == ObjectsType.Slant)
+            if (currentObjectType.objectType == ObjectsType.Slant)
+            {
+                if (Input.GetKeyDown(KeyCode.Z))
                 {
-                    if (Input.GetKeyDown(KeyCode.Z))
+                    if (Mathf.Floor(currentObjectType.transform.localEulerAngles.z) <= 0)
                     {
-                        if (currentObjectType.transform.localRotation.z <= 0)
-                        {
-                            RotateObject(Vector3.forward, 20);
-                        }
+                        RotateObject(Vector3.forward, 20);
                     }
-                    else if (Input.GetKeyDown(KeyCode.X))
+                }
+                else if (Input.GetKeyDown(KeyCode.X))
+                {
+                    if (Mathf.Floor(360f - currentObjectType.transform.localEulerAngles.z) >= 0)
                     {
-                        if (currentObjectType.transform.localRotation.z >= 0)
-                        {
-                            RotateObject(Vector3.forward, -20);
-                        }
+                        RotateObject(Vector3.forward, -20);
                     }
                 }
             }
@@ -83,6 +86,12 @@ namespace Builder
 
         private void PlaceObject()
         {
+            if (currentObjectType.objectType == ObjectsType.Slant && !UpPointHeights.ContainsKey(currentObjectType.upPointHeight))
+            {
+                UpPointHeights.Add(MathF.Round(currentObjectType.upPointHeight, 2), false);
+                UpPointHeights = new Dictionary<float, bool>(UpPointHeights.OrderBy(x => x.Key));
+            }
+            
             pendingObject = null;
         }
 
@@ -109,11 +118,14 @@ namespace Builder
 
         public void UpFloor()
         {
-            if (_currentGroundIndex != grounds.Count - 1)
+            if(_currentGroundIndex == UpPointHeights.Count - 1) return;
+
+            _currentGroundIndex++;
+            if (UpPointHeights.ElementAt(_currentGroundIndex).Value)
             {
                 for (var i = 0; i < grounds.Count; i++)
                 {
-                    if(i != _currentGroundIndex + 1)
+                    if(i != _currentGroundIndex)
                         grounds[i].SetActive(false);
                     else
                     {
@@ -127,10 +139,11 @@ namespace Builder
             else
             {
                 var newGround = Instantiate(groundPrefab,
-                    new Vector3(0, grounds[^1].transform.position.y + 2.6f, 0), Quaternion.identity);
+                    new Vector3(0, UpPointHeights.ElementAt(_currentGroundIndex).Key, 0), Quaternion.identity);
 
                 grounds.Add(newGround);
                 _currentGroundIndex = grounds.Count - 1;
+                UpPointHeights[UpPointHeights.ElementAt(_currentGroundIndex).Key] = true;
                 _currentGround = newGround;
 
                 foreach (var ground in grounds)

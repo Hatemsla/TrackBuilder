@@ -38,9 +38,10 @@ namespace Builder
 
         public void Delete()
         {
+            if (selectedObject == null) return;
             var obj = selectedObject;
             Deselect();
-            Destroy(obj);
+            Destroy(obj.transform.root.gameObject);
         }
 
         private void Select(GameObject obj)
