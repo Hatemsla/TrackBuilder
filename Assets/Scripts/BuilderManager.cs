@@ -14,10 +14,9 @@ namespace Builder
         public TrackObject currentObjectType;
         public GameObject groundPrefab;
         public GameObject[] objects;
-        public List<GameObject> grounds;
         public Dictionary<float, bool> UpPointHeights;
-
-        private GameObject _currentGround;
+        public Dictionary<GameObject, float> Grounds;
+        
         private int _currentGroundIndex;
         private Vector3 _pos;
         private RaycastHit _hit;
@@ -25,6 +24,7 @@ namespace Builder
         private void Start()
         {
             UpPointHeights = new Dictionary<float, bool> { { 0f, true } };
+            Grounds = new Dictionary<GameObject, float> { { groundPrefab, 0f } };
         }
 
         private void Update()
@@ -39,9 +39,26 @@ namespace Builder
                     RoundToNearsGrid(_pos.z)
                 );
             }
+            else if (currentObjectType.objectType == ObjectsType.Slant)
+            {
+                var yOffset = currentObjectType.rotateStateIndex switch
+                {
+                    -1 => 1f,
+                    0 => 1.35f,
+                    _ => 1.65f
+                };
+
+                var y = Grounds.ElementAt(_currentGroundIndex).Value + yOffset;
+                pendingObject.transform.position = new Vector3
+                (
+                    RoundToNearsGrid(_pos.x),
+                    y,
+                    RoundToNearsGrid(_pos.z)
+                );
+            }
             else
             {
-                var y = grounds[_currentGroundIndex].transform.position.y + 1.35f;
+                var y = Grounds.ElementAt(_currentGroundIndex).Value + 1.35f;
                 pendingObject.transform.position = new Vector3
                 (
                     RoundToNearsGrid(_pos.x),
@@ -118,14 +135,13 @@ namespace Builder
             _currentGroundIndex++;
             if (UpPointHeights.ElementAt(_currentGroundIndex).Value)
             {
-                for (var i = 0; i < grounds.Count; i++)
+                for (var i = 0; i < Grounds.Count; i++)
                 {
                     if(i != _currentGroundIndex)
-                        grounds[i].SetActive(false);
+                        Grounds.ElementAt(i).Key.SetActive(false);
                     else
                     {
-                        grounds[i].SetActive(true);
-                        _currentGround = grounds[i];
+                        Grounds.ElementAt(i).Key.SetActive(true);
                         _currentGroundIndex = i;
                         break;
                     }
@@ -136,35 +152,36 @@ namespace Builder
                 var newGround = Instantiate(groundPrefab,
                     new Vector3(0, UpPointHeights.ElementAt(_currentGroundIndex).Key, 0), Quaternion.identity);
 
-                grounds.Add(newGround);
-                _currentGroundIndex = grounds.Count - 1;
+                Grounds.Add(newGround, UpPointHeights.ElementAt(_currentGroundIndex).Key);
+                Grounds = new Dictionary<GameObject, float>(Grounds.OrderBy(x => x.Value));
                 UpPointHeights[UpPointHeights.ElementAt(_currentGroundIndex).Key] = true;
-                _currentGround = newGround;
 
-                foreach (var ground in grounds)
+                foreach (var ground in Grounds)
                 {
-                    ground.SetActive(ground == newGround);
+                    ground.Key.SetActive(ground.Key == newGround);
+
+                    if (ground.Key == newGround)
+                        _currentGroundIndex = Grounds.Keys.ToList().IndexOf(ground.Key);
                 }
             }
         }
 
         public void DownFloor()
         {
-            var prevGroundIndex = grounds.IndexOf(_currentGround) - 1;
+            var isGroundExist = Grounds.ContainsKey(Grounds.ElementAt(_currentGroundIndex - 1).Key);
             
-            if(prevGroundIndex < 0)
+            if(!isGroundExist)
                 return;
 
-            _currentGroundIndex = prevGroundIndex;
+            _currentGroundIndex--;
             
-            for (var i = 0; i < grounds.Count; i++)
+            for (var i = 0; i < Grounds.Count; i++)
             {
-                if(i != prevGroundIndex)
-                    grounds[i].SetActive(false);
+                if(i != _currentGroundIndex)
+                    Grounds.ElementAt(i).Key.SetActive(false);
                 else
                 {
-                    grounds[i].SetActive(true);
-                    _currentGround = grounds[i];
+                    Grounds.ElementAt(i).Key.SetActive(true);
                 }
             }
         }
