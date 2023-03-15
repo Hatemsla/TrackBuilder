@@ -15,7 +15,6 @@ namespace Builder
         public GameObject groundPrefab;
         public GameObject[] objects;
         public List<GameObject> grounds;
-        // public List<float> upPointHeights;
         public Dictionary<float, bool> UpPointHeights;
 
         private GameObject _currentGround;
@@ -58,35 +57,31 @@ namespace Builder
                 
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                RotateObject(Vector3.up, -90);
+                RotateObject(Vector3.up, -90, Space.World);
             }
             else if (Input.GetKeyDown(KeyCode.E))
             {
-                RotateObject(Vector3.up, 90);
+                RotateObject(Vector3.up, 90, Space.World);
             }
 
             if (currentObjectType.objectType == ObjectsType.Slant)
             {
-                if (Input.GetKeyDown(KeyCode.Z))
+                if (Input.GetKeyDown(KeyCode.Z) && currentObjectType.rotateStateIndex >= 0)
                 {
-                    if (Mathf.Floor(currentObjectType.transform.localEulerAngles.z) <= 0)
-                    {
-                        RotateObject(Vector3.forward, 20);
-                    }
+                    currentObjectType.rotateStateIndex--;
+                    RotateObject(Vector3.forward, -20f, Space.Self);
                 }
-                else if (Input.GetKeyDown(KeyCode.X))
+                else if (Input.GetKeyDown(KeyCode.X) && currentObjectType.rotateStateIndex <= 0)
                 {
-                    if (Mathf.Floor(360f - currentObjectType.transform.localEulerAngles.z) >= 0)
-                    {
-                        RotateObject(Vector3.forward, -20);
-                    }
+                    currentObjectType.rotateStateIndex++;
+                    RotateObject(Vector3.forward, 20f, Space.Self);
                 }
             }
         }
 
         private void PlaceObject()
         {
-            if (currentObjectType.objectType == ObjectsType.Slant && !UpPointHeights.ContainsKey(currentObjectType.upPointHeight))
+            if (currentObjectType.objectType == ObjectsType.Slant && !UpPointHeights.ContainsKey(MathF.Round(currentObjectType.upPointHeight, 2)))
             {
                 UpPointHeights.Add(MathF.Round(currentObjectType.upPointHeight, 2), false);
                 UpPointHeights = new Dictionary<float, bool>(UpPointHeights.OrderBy(x => x.Key));
@@ -95,11 +90,11 @@ namespace Builder
             pendingObject = null;
         }
 
-        private void RotateObject(Vector3 axis, float rotateAmount)
+        private void RotateObject(Vector3 axis, float rotateAmount, Space space)
         {
-            pendingObject.transform.Rotate(axis, rotateAmount, Space.World);
+            pendingObject.transform.Rotate(axis, rotateAmount, space);
         }
-
+        
         private void FixedUpdate()
         {
             Ray ray = Camera.main!.ScreenPointToRay(Input.mousePosition);

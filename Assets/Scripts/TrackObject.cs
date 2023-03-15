@@ -8,6 +8,7 @@ public class TrackObject : MonoBehaviour
 {
     public ObjectsType objectType;
     public float upPointHeight;
+    public int rotateStateIndex = 0;
 
     private Transform _upPointTransform;
 
@@ -18,6 +19,6 @@ public class TrackObject : MonoBehaviour
 
     private void Update()
     {
-        upPointHeight = _upPointTransform.position.y;
+        upPointHeight = MathF.Round(_upPointTransform.position.y, 2);
     }
 }
