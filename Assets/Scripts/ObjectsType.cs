@@ -4,6 +4,7 @@
     {
         Floor,
         Wall,
-        Slant
+        Slant,
+        Gate
     }
 }

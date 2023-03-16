@@ -32,6 +32,7 @@ namespace Builder
 
         public void Move()
         {
+            if (selectedObject == null) return;
             _builderManager.pendingObject = selectedObject.transform.root.gameObject;
             _builderManager.currentObjectType = selectedObject.GetComponentInParent<TrackObject>();
         }
@@ -56,7 +57,11 @@ namespace Builder
 
             var outline = obj.GetComponent<Outline>();
             if (outline == null)
-                obj.AddComponent<Outline>();
+            {
+                outline = obj.AddComponent<Outline>();
+                outline.OutlineColor = Color.red;
+                outline.OutlineWidth = 5f;
+            }
             else
                 outline.enabled = true;
             selectedObject = obj;

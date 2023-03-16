@@ -20,9 +20,12 @@ namespace Builder
         private int _currentGroundIndex;
         private Vector3 _pos;
         private RaycastHit _hit;
-
+        private float _heightGateOffset = 2f;
+        private BuilderUI _builderUI;
+            
         private void Start()
         {
+            _builderUI = FindObjectOfType<BuilderUI>();
             UpPointHeights = new Dictionary<float, bool> { { 0f, true } };
             Grounds = new Dictionary<GameObject, float> { { groundPrefab, 0f } };
         }
@@ -30,41 +33,63 @@ namespace Builder
         private void Update()
         {
             if (pendingObject == null) return;
-            if (currentObjectType.objectType == ObjectsType.Floor)
+            switch (currentObjectType.objectType)
             {
-                pendingObject.transform.position = new Vector3
-                (
-                    RoundToNearsGrid(_pos.x),
-                    _pos.y,
-                    RoundToNearsGrid(_pos.z)
-                );
-            }
-            else if (currentObjectType.objectType == ObjectsType.Slant)
-            {
-                var yOffset = currentObjectType.rotateStateIndex switch
+                case ObjectsType.Floor:
+                    pendingObject.transform.position = new Vector3
+                    (
+                        RoundToNearsGrid(_pos.x),
+                        _pos.y,
+                        RoundToNearsGrid(_pos.z)
+                    );
+                    break;
+                case ObjectsType.Slant:
                 {
-                    -1 => 1f,
-                    0 => 1.35f,
-                    _ => 1.65f
-                };
+                    var yOffset = currentObjectType.rotateStateIndex switch
+                    {
+                        -1 => 1f,
+                        0 => 1.35f,
+                        _ => 1.65f
+                    };
 
-                var y = Grounds.ElementAt(_currentGroundIndex).Value + yOffset;
-                pendingObject.transform.position = new Vector3
-                (
-                    RoundToNearsGrid(_pos.x),
-                    y,
-                    RoundToNearsGrid(_pos.z)
-                );
-            }
-            else
-            {
-                var y = Grounds.ElementAt(_currentGroundIndex).Value + 1.35f;
-                pendingObject.transform.position = new Vector3
-                (
-                    RoundToNearsGrid(_pos.x),
-                    y,
-                    RoundToNearsGrid(_pos.z)
-                );
+                    var y = Grounds.ElementAt(_currentGroundIndex).Value + yOffset;
+                    pendingObject.transform.position = new Vector3
+                    (
+                        RoundToNearsGrid(_pos.x),
+                        y,
+                        RoundToNearsGrid(_pos.z)
+                    );
+                    break;
+                }
+                case ObjectsType.Gate:
+                {
+                    _heightGateOffset = currentObjectType.heightStateIndex switch
+                    {
+                        -1 => 1.375f,
+                        0 => 2f,
+                        _ => 3f
+                    };
+
+                    var y = Grounds.ElementAt(_currentGroundIndex).Value + _heightGateOffset;
+                    pendingObject.transform.position = new Vector3
+                    (
+                        RoundToNearsGrid(_pos.x),
+                        y,
+                        RoundToNearsGrid(_pos.z)
+                    );
+                    break;
+                }
+                default:
+                {
+                    var y = Grounds.ElementAt(_currentGroundIndex).Value + 1.35f;
+                    pendingObject.transform.position = new Vector3
+                    (
+                        RoundToNearsGrid(_pos.x),
+                        y,
+                        RoundToNearsGrid(_pos.z)
+                    );
+                    break;
+                }
             }
 
             if (Input.GetMouseButtonDown(0) && canPlace)
@@ -74,24 +99,37 @@ namespace Builder
                 
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                RotateObject(Vector3.up, -90, Space.World);
+                RotateObject(Vector3.up, currentObjectType.objectType == ObjectsType.Gate ? -45 : -90, Space.World);
             }
             else if (Input.GetKeyDown(KeyCode.E))
             {
-                RotateObject(Vector3.up, 90, Space.World);
+                RotateObject(Vector3.up, currentObjectType.objectType == ObjectsType.Gate ? 45 : 90, Space.World);
             }
 
-            if (currentObjectType.objectType == ObjectsType.Slant)
+            if (Input.GetKeyDown(KeyCode.Z))
             {
-                if (Input.GetKeyDown(KeyCode.Z) && currentObjectType.rotateStateIndex >= 0)
+                switch (currentObjectType.objectType)
                 {
-                    currentObjectType.rotateStateIndex--;
-                    RotateObject(Vector3.forward, -20f, Space.Self);
+                    case ObjectsType.Slant when currentObjectType.rotateStateIndex >= 0:
+                        currentObjectType.rotateStateIndex--;
+                        RotateObject(Vector3.forward, -20f, Space.Self);
+                        break;
+                    case ObjectsType.Gate when currentObjectType.heightStateIndex <= 0:
+                        currentObjectType.heightStateIndex++;
+                        break;
                 }
-                else if (Input.GetKeyDown(KeyCode.X) && currentObjectType.rotateStateIndex <= 0)
+            }
+            else if (Input.GetKeyDown(KeyCode.X))
+            {
+                switch (currentObjectType.objectType)
                 {
-                    currentObjectType.rotateStateIndex++;
-                    RotateObject(Vector3.forward, 20f, Space.Self);
+                    case ObjectsType.Slant when currentObjectType.rotateStateIndex <= 0:
+                        currentObjectType.rotateStateIndex++;
+                        RotateObject(Vector3.forward, 20f, Space.Self);
+                        break;
+                    case ObjectsType.Gate when currentObjectType.heightStateIndex >= 0:
+                        currentObjectType.heightStateIndex--;
+                        break;
                 }
             }
         }
@@ -120,6 +158,11 @@ namespace Builder
             {
                 _pos = _hit.point;
             }
+        }
+
+        public void ConfirmGridSize()
+        {
+            gridSize = Convert.ToSingle(_builderUI.gridSizeInput.text.Replace('.', ','));
         }
 
         public void SelectObject(int index)

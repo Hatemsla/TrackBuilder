@@ -9,6 +9,7 @@ public class TrackObject : MonoBehaviour
     public ObjectsType objectType;
     public float upPointHeight;
     public int rotateStateIndex = 0;
+    public int heightStateIndex = 0;
 
     private Transform _upPointTransform;
 
