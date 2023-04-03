@@ -15,7 +15,7 @@ public class CheckPlacement : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Track"))
+        if (other.gameObject.layer == LayerMask.NameToLayer("TrackGround"))
         {
             _builderManager.canPlace = false;
         }
@@ -23,7 +23,7 @@ public class CheckPlacement : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.CompareTag("Track"))
+        if (other.gameObject.layer == LayerMask.NameToLayer("TrackGround"))
         {
             _builderManager.canPlace = true;
         }

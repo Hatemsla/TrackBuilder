@@ -13,18 +13,21 @@ namespace Builder
         public GameObject pendingObject;
         public TrackObject currentObjectType;
         public GameObject groundPrefab;
+        public Vector3 mousePos;
         public GameObject[] objects;
+        public List<GameObject> objectsPool;
         public Dictionary<float, bool> UpPointHeights;
         public Dictionary<GameObject, float> Grounds;
         
         private int _currentGroundIndex;
-        private Vector3 _pos;
         private RaycastHit _hit;
         private float _heightGateOffset = 2f;
         private BuilderUI _builderUI;
+        private Selection _selection;
             
         private void Start()
         {
+            _selection = FindObjectOfType<Selection>();
             _builderUI = FindObjectOfType<BuilderUI>();
             UpPointHeights = new Dictionary<float, bool> { { 0f, true } };
             Grounds = new Dictionary<GameObject, float> { { groundPrefab, 0f } };
@@ -32,65 +35,83 @@ namespace Builder
 
         private void Update()
         {
-            if (pendingObject == null) return;
-            switch (currentObjectType.objectType)
+            Ray ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out _hit, 10000, layerMask))
             {
-                case ObjectsType.Floor:
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        _pos.y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                    break;
-                case ObjectsType.Slant:
+                mousePos = _hit.point;
+                
+                if (pendingObject == null) return;
+                
+                if (LayerMask.LayerToName(_hit.collider.gameObject.layer) == "FloorConnection" && currentObjectType.objectType == ObjectsType.Floor)
                 {
-                    var yOffset = currentObjectType.rotateStateIndex switch
-                    {
-                        -1 => 1f,
-                        0 => 1.35f,
-                        _ => 1.65f
-                    };
-
-                    var y = Grounds.ElementAt(_currentGroundIndex).Value + yOffset;
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                    break;
+                    // pendingObject.transform.position = _hit.collider.transform.position;
+                    // pendingObject.transform.rotation = _hit.collider.transform.rotation;
                 }
-                case ObjectsType.Gate:
+                else
                 {
-                    _heightGateOffset = currentObjectType.heightStateIndex switch
-                    {
-                        -1 => 1.375f,
-                        0 => 2f,
-                        _ => 3f
-                    };
-
-                    var y = Grounds.ElementAt(_currentGroundIndex).Value + _heightGateOffset;
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                    break;
-                }
-                default:
-                {
-                    var y = Grounds.ElementAt(_currentGroundIndex).Value + 1.35f;
-                    pendingObject.transform.position = new Vector3
-                    (
-                        RoundToNearsGrid(_pos.x),
-                        y,
-                        RoundToNearsGrid(_pos.z)
-                    );
-                    break;
+                    pendingObject.transform.position = _hit.point;
                 }
             }
+            
+            // switch (currentObjectType.objectType)
+            // {
+            //     case ObjectsType.Floor:
+            //         pendingObject.transform.position = new Vector3
+            //         (
+            //             RoundToNearsGrid(_pos.x),
+            //             _pos.y,
+            //             RoundToNearsGrid(_pos.z)
+            //         );
+            //         break;
+            //     case ObjectsType.Slant:
+            //     {
+            //         var yOffset = currentObjectType.rotateStateIndex switch
+            //         {
+            //             -1 => 1f,
+            //             0 => 1.35f,
+            //             _ => 1.65f
+            //         };
+            //
+            //         var y = Grounds.ElementAt(_currentGroundIndex).Value + yOffset;
+            //         pendingObject.transform.position = new Vector3
+            //         (
+            //             RoundToNearsGrid(_pos.x),
+            //             y,
+            //             RoundToNearsGrid(_pos.z)
+            //         );
+            //         break;
+            //     }
+            //     case ObjectsType.Gate:
+            //     {
+            //         _heightGateOffset = currentObjectType.heightStateIndex switch
+            //         {
+            //             -1 => 1.375f,
+            //             0 => 2f,
+            //             _ => 3f
+            //         };
+            //
+            //         var y = Grounds.ElementAt(_currentGroundIndex).Value + _heightGateOffset;
+            //         pendingObject.transform.position = new Vector3
+            //         (
+            //             RoundToNearsGrid(_pos.x),
+            //             y,
+            //             RoundToNearsGrid(_pos.z)
+            //         );
+            //         break;
+            //     }
+            //     default:
+            //     {
+            //         var y = Grounds.ElementAt(_currentGroundIndex).Value + 1.35f;
+            //         pendingObject.transform.position = new Vector3
+            //         (
+            //             RoundToNearsGrid(_pos.x),
+            //             y,
+            //             RoundToNearsGrid(_pos.z)
+            //         );
+            //         break;
+            //     }
+            // }
 
             if (Input.GetMouseButtonDown(0) && canPlace)
             {
@@ -134,30 +155,42 @@ namespace Builder
             }
         }
 
-        private void PlaceObject()
+        public void PlaceObject()
         {
-            if (currentObjectType.objectType == ObjectsType.Slant && !UpPointHeights.ContainsKey(MathF.Round(currentObjectType.upPointHeight, 2)))
+            // if (currentObjectType.objectType == ObjectsType.Slant && !UpPointHeights.ContainsKey(MathF.Round(currentObjectType.upPointHeight, 2)))
+            // {
+            //     UpPointHeights.Add(MathF.Round(currentObjectType.upPointHeight, 2), false);
+            //     UpPointHeights = new Dictionary<float, bool>(UpPointHeights.OrderBy(x => x.Key));
+            // }
+
+            try
             {
-                UpPointHeights.Add(MathF.Round(currentObjectType.upPointHeight, 2), false);
-                UpPointHeights = new Dictionary<float, bool>(UpPointHeights.OrderBy(x => x.Key));
+                ChangeLayerRecursively(pendingObject.transform, LayerMask.NameToLayer("TrackGround"));
+                currentObjectType = null;
+                pendingObject = null;
             }
-            
-            pendingObject = null;
+            catch
+            {
+                // ignored
+            }
+        }
+        
+        public void ChangeLayerRecursively(Transform obj, int layer)
+        {
+            if (LayerMask.LayerToName(obj.gameObject.layer) != "FloorConnection")
+            {
+                obj.gameObject.layer = layer;
+            }
+
+            foreach (Transform child in obj)
+            {
+                ChangeLayerRecursively(child, layer);
+            }
         }
 
         private void RotateObject(Vector3 axis, float rotateAmount, Space space)
         {
             pendingObject.transform.Rotate(axis, rotateAmount, space);
-        }
-        
-        private void FixedUpdate()
-        {
-            Ray ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out _hit, 10000, layerMask))
-            {
-                _pos = _hit.point;
-            }
         }
 
         public void ConfirmGridSize()
@@ -167,8 +200,12 @@ namespace Builder
 
         public void SelectObject(int index)
         {
-            pendingObject = Instantiate(objects[index], _pos, transform.rotation);
+            pendingObject = Instantiate(objects[index], mousePos, transform.rotation);
+            objectsPool.Add(pendingObject);
+            _selection.Deselect();
+            _selection.Select(pendingObject);
             currentObjectType = pendingObject.GetComponent<TrackObject>();
+            currentObjectType.isActive = true;
         }
 
         public void UpFloor()

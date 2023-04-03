@@ -1,5 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UI;
+using cakeslice;
+using Outline = cakeslice.Outline;
 
 namespace Builder
 {
@@ -20,12 +23,13 @@ namespace Builder
                 var ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, 10000))
-                    if (hit.collider.gameObject.CompareTag("Track"))
-                        Select(hit.collider.gameObject);
+                    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("TrackGround"))
+                        Select(hit.collider.transform.root.gameObject);
             }
 
-            if (Input.GetMouseButtonDown(1) && selectedObject != null)
+            if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1)) && selectedObject != null)
             {
+                _builderManager.PlaceObject();
                 Deselect();
             }
         }
@@ -33,8 +37,10 @@ namespace Builder
         public void Move()
         {
             if (selectedObject == null) return;
+            _builderManager.ChangeLayerRecursively(selectedObject.transform.root.transform, LayerMask.NameToLayer("Track"));
             _builderManager.pendingObject = selectedObject.transform.root.gameObject;
             _builderManager.currentObjectType = selectedObject.GetComponentInParent<TrackObject>();
+            _builderManager.currentObjectType.isActive = true;
         }
 
         public void Delete()
@@ -45,45 +51,35 @@ namespace Builder
             Destroy(obj.transform.root.gameObject);
         }
 
-        private void Select(GameObject obj)
+        public void Select(GameObject obj)
         {
-            IsSlant(ref obj);
-            
             if (obj == selectedObject)
                 return;
             
             if(selectedObject != null)
                 Deselect();
 
-            var outline = obj.GetComponent<Outline>();
-            if (outline == null)
+            var outlines = obj.transform.root.GetComponentsInChildren<Outline>();
+            foreach (var outline in outlines)
             {
-                outline = obj.AddComponent<Outline>();
-                outline.OutlineColor = Color.red;
-                outline.OutlineWidth = 5f;
-            }
-            else
                 outline.enabled = true;
+            }
             selectedObject = obj;
         }
 
-        private void Deselect()
+        public void Deselect()
         {
-            selectedObject.GetComponent<Outline>().enabled = false;
-            selectedObject = null;
-        }
+            if (selectedObject == null)
+                return;
 
-        private void IsSlant(ref GameObject obj)
-        {
-            var trackObject = obj.GetComponentInParent<TrackObject>();
-
-            if (trackObject)
+            var outlines = selectedObject!.transform.root.GetComponentsInChildren<Outline>();
+            foreach (var outline in outlines)
             {
-                if (trackObject.objectType == ObjectsType.Slant)
-                {
-                    obj = obj.transform.root.GetComponentInChildren<MeshRenderer>().gameObject;
-                }
+                outline.enabled = false;
             }
+
+            selectedObject.GetComponent<TrackObject>().isActive = false;
+            selectedObject = null;
         }
     }
 }
