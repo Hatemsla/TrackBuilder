@@ -9,6 +9,7 @@ namespace Builder
     public class Selection : MonoBehaviour
     {
         public GameObject selectedObject;
+        public LayerMask layerMask;
         private BuilderManager _builderManager;
 
         private void Start()
@@ -22,7 +23,7 @@ namespace Builder
             {
                 var ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 10000))
+                if (Physics.Raycast(ray, out hit, 10000, layerMask))
                     if (hit.collider.gameObject.layer == LayerMask.NameToLayer("TrackGround"))
                         Select(hit.collider.transform.root.gameObject);
             }

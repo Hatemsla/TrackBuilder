@@ -5,7 +5,6 @@ namespace Builder
 {
     public class Connection : MonoBehaviour
     {
-        public bool isLinked;
         private TrackObject _trackObject;
         private BuilderManager _builderManager;
         private Selection _selection;
@@ -25,10 +24,19 @@ namespace Builder
                     other.gameObject.layer == LayerMask.NameToLayer("FloorConnection"))
                 {
                     _builderManager.PlaceObject();
-                    isLinked = true;
-                    other.GetComponent<Connection>().isLinked = true;
                     _trackObject.transform.position = other.transform.position;
-                    _trackObject.transform.rotation = other.transform.rotation;
+                }
+                else if (_trackObject.objectType == ObjectsType.Wall &&
+                         other.gameObject.layer == LayerMask.NameToLayer("WallConnection"))
+                {
+                    _builderManager.PlaceObject();
+                    _trackObject.transform.position = other.transform.position;
+                }
+                else if (_trackObject.objectType == ObjectsType.Slant &&
+                         other.gameObject.layer == LayerMask.NameToLayer("WallConnection"))
+                {
+                    _builderManager.PlaceObject();
+                    _trackObject.transform.position = other.transform.position;
                 }
             }
         }
@@ -43,22 +51,23 @@ namespace Builder
                     if (Vector3.Distance(other.transform.position, _builderManager.mousePos) > 3)
                     {
                         _selection.Move();
-                        isLinked = false;
-                        other.GetComponent<Connection>().isLinked = false;
                     }
                 }
-            }
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (_trackObject.isActive)
-            {
-                if (_trackObject.objectType == ObjectsType.Floor &&
-                    other.gameObject.layer == LayerMask.NameToLayer("FloorConnection"))
+                else if (_trackObject.objectType == ObjectsType.Wall &&
+                         other.gameObject.layer == LayerMask.NameToLayer("WallConnection"))
                 {
-                    isLinked = false;
-                    other.GetComponent<Connection>().isLinked = false;
+                    if (Vector3.Distance(other.transform.position, _builderManager.mousePos) > 3)
+                    {
+                        _selection.Move();
+                    }
+                }
+                else if (_trackObject.objectType == ObjectsType.Slant &&
+                         other.gameObject.layer == LayerMask.NameToLayer("WallConnection"))
+                {
+                    if (Vector3.Distance(other.transform.position, _builderManager.mousePos) > 4)
+                    {
+                        _selection.Move();
+                    }
                 }
             }
         }

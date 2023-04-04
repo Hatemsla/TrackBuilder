@@ -3461,6 +3461,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectedObject: {fileID: 0}
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!4 &1818799924
 Transform:
   m_ObjectHideFlags: 0
@@ -3918,11 +3921,13 @@ MonoBehaviour:
   pendingObject: {fileID: 0}
   currentObjectType: {fileID: 0}
   groundPrefab: {fileID: 6798339470373176028, guid: b3b3954c701c0cc4fbc912b28438e978, type: 3}
+  mousePos: {x: 0, y: 0, z: 0}
   objects:
   - {fileID: 7920376084157599920, guid: bc8ac98ad4fd93b468b4ed4426afdd39, type: 3}
   - {fileID: 1541676113324626648, guid: 181dbdf7c07606e46b900350b8161edb, type: 3}
   - {fileID: 83540553584772983, guid: 79f648a0d65b94641b6cb852f3b74170, type: 3}
   - {fileID: 8593175009206053158, guid: d9387ae542a894a4ea93a1b8d5734caa, type: 3}
+  objectsPool: []
 --- !u!4 &1964624141
 Transform:
   m_ObjectHideFlags: 0

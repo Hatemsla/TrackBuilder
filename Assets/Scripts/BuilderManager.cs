@@ -50,7 +50,23 @@ namespace Builder
                 }
                 else
                 {
-                    pendingObject.transform.position = _hit.point;
+                    switch (currentObjectType.objectType)
+                    {
+                        case ObjectsType.Floor:
+                            pendingObject.transform.position = _hit.point;
+                            break;
+                        case ObjectsType.Wall:
+                            pendingObject.transform.position =
+                                new Vector3(_hit.point.x, _hit.point.y + 1.25f, _hit.point.z);
+                            break;
+                        case ObjectsType.Slant:
+                            pendingObject.transform.position =
+                                new Vector3(_hit.point.x, _hit.point.y + 1.25f, _hit.point.z);
+                            break;
+                        default:
+                            pendingObject.transform.position = _hit.point;
+                            break;
+                    }
                 }
             }
             
@@ -177,7 +193,7 @@ namespace Builder
         
         public void ChangeLayerRecursively(Transform obj, int layer)
         {
-            if (LayerMask.LayerToName(obj.gameObject.layer) != "FloorConnection")
+            if (LayerMask.LayerToName(obj.gameObject.layer) != "FloorConnection" && LayerMask.LayerToName(obj.gameObject.layer) != "WallConnection")
             {
                 obj.gameObject.layer = layer;
             }
